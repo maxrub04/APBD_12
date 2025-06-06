@@ -1,0 +1,44 @@
+@APBD_12_HostAddress = http://localhost:5000
+
+### -- GET Trips (Page 1) --
+GET {{APBD_12_HostAddress}}/api/trips?page=1&pageSize=10
+Accept: application/json
+
+### -- POST: Assign New Client to a Trip (Valid Data) --
+POST {{APBD_12_HostAddress}}/api/trips/1/clients
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "telephone": "123-456-789",
+  "pesel": "91040294554",
+  "paymentDate": "2025-06-10"
+}
+
+### -- POST: Assign Client with Existing PESEL (Should Fail) --
+POST {{APBD_12_HostAddress}}/api/trips/1/clients
+Content-Type: application/json
+
+{
+  "firstName": "Existing",
+  "lastName": "User",
+  "email": "exists@example.com",
+  "telephone": "321-654-987",
+  "pesel": "91040294554",
+  "paymentDate": "2025-06-10"
+}
+
+### -- POST: Assign Client to Nonexistent Trip (Should Fail) --
+POST {{APBD_12_HostAddress}}/api/trips/9999/clients
+Content-Type: application/json
+
+{
+  "firstName": "Ghost",
+  "lastName": "Trip",
+  "email": "ghost@nowhere.com",
+  "telephone": "000-000-000",
+  "pesel": "90010112345",
+  "paymentDate": null
+}
