@@ -1,44 +1,88 @@
 @APBD_12_HostAddress = http://localhost:5000
 
-### -- GET Trips (Page 1) --
+### ============================================
+### 1 GET /api/trips - with pagination
+### ============================================
+
 GET {{APBD_12_HostAddress}}/api/trips?page=1&pageSize=10
 Accept: application/json
 
-### -- POST: Assign New Client to a Trip (Valid Data) --
+
+### ============================================
+### 2 DELETE /api/clients/{idClient}
+### ============================================
+
+DELETE {{APBD_12_HostAddress}}/api/clients/5
+Accept: application/json
+
+
+### ============================================
+### 3 POST /api/trips/{idTrip}/clients - success case
+### ============================================
+
 POST {{APBD_12_HostAddress}}/api/trips/1/clients
 Content-Type: application/json
+Accept: application/json
 
 {
   "firstName": "John",
   "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "telephone": "123-456-789",
+  "email": "doe@wp.pl",
+  "telephone": "543-323-542",
   "pesel": "91040294554",
-  "paymentDate": "2025-06-10"
+  "paymentDate": "2021-04-20"
 }
 
-### -- POST: Assign Client with Existing PESEL (Should Fail) --
+
+### ============================================
+### 3 POST /api/trips/{idTrip}/clients - PESEL exists (expect error)
+### ============================================
+
 POST {{APBD_12_HostAddress}}/api/trips/1/clients
 Content-Type: application/json
+Accept: application/json
 
 {
-  "firstName": "Existing",
-  "lastName": "User",
-  "email": "exists@example.com",
-  "telephone": "321-654-987",
+  "firstName": "Already",
+  "lastName": "Exists",
+  "email": "exists@wp.pl",
+  "telephone": "123-123-123",
   "pesel": "91040294554",
-  "paymentDate": "2025-06-10"
+  "paymentDate": null
 }
 
-### -- POST: Assign Client to Nonexistent Trip (Should Fail) --
+
+### ============================================
+### 3 POST /api/trips/{idTrip}/clients - non-existent trip (expect 404)
+### ============================================
+
 POST {{APBD_12_HostAddress}}/api/trips/9999/clients
 Content-Type: application/json
+Accept: application/json
 
 {
   "firstName": "Ghost",
   "lastName": "Trip",
   "email": "ghost@nowhere.com",
   "telephone": "000-000-000",
-  "pesel": "90010112345",
-  "paymentDate": null
+  "pesel": "92010123456",
+  "paymentDate": "2025-06-10"
+}
+
+
+### ============================================
+### 3 POST /api/trips/{idTrip}/clients - trip in the past (expect error)
+### ============================================
+
+POST {{APBD_12_HostAddress}}/api/trips/2/clients
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "Time",
+  "lastName": "Traveler",
+  "email": "timetraveler@back.to",
+  "telephone": "000-999-999",
+  "pesel": "87010112345",
+  "paymentDate": "2023-01-01"
 }
