@@ -1,3 +1,5 @@
+using System;
+
 namespace APBD_12.Models;
 
 public class ClientTrip

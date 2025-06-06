@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace APBD_12.DTOs;
 
 public class TripResponseDto

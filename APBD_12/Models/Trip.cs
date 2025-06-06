@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace APBD_12.Models;
 
 public class Trip
