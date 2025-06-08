@@ -32,10 +32,6 @@ public class TripsController : ControllerBase
     [HttpPost("{idTrip}/clients")]
     public async Task<IActionResult> AssignClientToTrip(int idTrip, [FromBody] AssignClientToTripDto dto)
     {
-        if (dto.IdTrip != idTrip)
-        {
-            return BadRequest("Trip ID in route and body don't match.");
-        }
 
         try
         {
