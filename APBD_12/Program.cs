@@ -8,23 +8,20 @@ using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddControllers();
+// Add services to the container.
+builder.Services.AddDbContext<Apbd12Context>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
-// Swagger/OpenAPI
+builder.Services.AddScoped<ITripService, TripService>();
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register EF DbContext
-builder.Services.AddDbContext<TripsDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register custom services
-builder.Services.AddScoped<ITripService, TripService>();
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

@@ -7,6 +7,7 @@ namespace APBD_12.Services;
 
 public interface ITripService
 {
-    Task<PagedTripResultDto> GetTripsAsync(int page, int pageSize);
-    Task<string> AssignClientToTripAsync(int idTrip, ClientTripDto dto);
+    Task<TripsResponseDto> GetTripsAsync(int pageNum, int pageSize);
+    Task<bool> DeleteClientAsync(int idClient);
+    Task AssignClientToTripAsync(AssignClientToTripDto dto);
 }

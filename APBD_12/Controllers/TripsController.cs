@@ -1,11 +1,6 @@
-using System;
-using System.Threading.Tasks;
-using APBD_12.Data;
 using APBD_12.DTOs;
-using APBD_12.Models;
+using APBD_12.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace APBD_12.Controllers;
 
@@ -13,94 +8,51 @@ namespace APBD_12.Controllers;
 [ApiController]
 public class TripsController : ControllerBase
 {
-    private readonly TripsDbContext _context;
+    private readonly ITripService _tripService;
 
-    public TripsController(TripsDbContext context)
+    public TripsController(ITripService tripService)
     {
-        _context = context;
+        _tripService = tripService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedTripResultDto>> GetTrips([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetTrips([FromQuery] int pageNum = 1, [FromQuery] int pageSize = 10)
     {
-        var query = _context.Trips
-            .Include(t => t.ClientTrips)
-                .ThenInclude(ct => ct.IdClientNavigation)
-            .Include(t => t.CountryTrips)
-                .ThenInclude(ct => ct.IdCountryNavigation)
-            .OrderByDescending(t => t.DateFrom);
-
-        int totalCount = await query.CountAsync();
-        int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-        var trips = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(t => new TripResponseDto
-            {
-                Name = t.Name,
-                Description = t.Description,
-                DateFrom = t.DateFrom,
-                DateTo = t.DateTo,
-                MaxPeople = t.MaxPeople,
-                Countries = t.CountryTrips
-                    .Select(c => new CountryDto { Name = c.IdCountryNavigation.Name })
-                    .ToList(),
-                Clients = t.ClientTrips
-                    .Select(c => new ClientDto()
-                    {
-                        FirstName = c.IdClientNavigation.FirstName,
-                        LastName = c.IdClientNavigation.LastName
-                    })
-                    .ToList()
-            })
-            .ToListAsync();
-
-        return Ok(new PagedTripResultDto
+        try
         {
-            PageNum = page,
-            PageSize = pageSize,
-            AllPages = totalPages,
-            Trips = trips
-        });
+            var result = await _tripService.GetTripsAsync(pageNum, pageSize);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpPost("{idTrip}/clients")]
-    public async Task<IActionResult> AssignClientToTrip(int idTrip, [FromBody] ClientTripDto dto)
+    public async Task<IActionResult> AssignClientToTrip(int idTrip, [FromBody] AssignClientToTripDto dto)
     {
-        if (await _context.Clients.AnyAsync(c => c.Pesel == dto.Pesel))
-            return Conflict("Client with given PESEL already exists.");
-
-        var trip = await _context.Trips.FindAsync(idTrip);
-        if (trip == null)
-            return NotFound("Trip not found.");
-
-        if (trip.DateFrom < DateTime.Now)
-            return BadRequest("Cannot register for a past trip.");
-
-        var client = new Models.Client
+        if (dto.IdTrip != idTrip)
         {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
-            Telephone = dto.Telephone,
-            Pesel = dto.Pesel
-        };
+            return BadRequest("Trip ID in route and body don't match.");
+        }
 
-        _context.Clients.Add(client);
-        await _context.SaveChangesAsync();
-
-        var clientTrip = new ClientTrip
+        try
         {
-            IdClient = client.IdClient,
-            IdTrip = idTrip,
-            RegisteredAt = DateTime.Now,
-            PaymentDate = dto.PaymentDate
-        };
-
-        _context.ClientTrips.Add(clientTrip);
-        await _context.SaveChangesAsync();
-
-        return Ok("Client assigned successfully.");
+            await _tripService.AssignClientToTripAsync(dto);
+            return Ok();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 }
